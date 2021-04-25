@@ -5,9 +5,16 @@
 #include <WifiManager.h>
 #include <NTPClient.h>
 #include <Timezone.h>
+#include <EEPROM.h>
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
+int hour_up = 9;
+int minute_up = 0;
+
+int hour_down = 22;
+int minute_down = 00;
 
 /**
  * Input time in epoch format and return tm time format
@@ -38,6 +45,75 @@ static String getEpochStringByParams(long time, char* pattern = (char *)"%d.%m.%
     tm newtime;
     newtime = getDateTimeByParams(time);
     return getDateTimeStringByParams(&newtime, pattern);
+}
+
+void writeConfig() {
+  EEPROM.begin(512);
+  EEPROM.write(1,hour_up);
+  EEPROM.write(2,minute_up);
+  EEPROM.write(3,hour_down);
+  EEPROM.write(4,minute_down);
+  EEPROM.commit();
+}
+
+void readConfig() {
+  EEPROM.begin(512);
+  hour_up = EEPROM.read(1);
+  minute_up = EEPROM.read(2);
+  hour_down = EEPROM.read(3);
+  minute_down = EEPROM.read(4);
+}
+
+void increase_up() {
+  if (minute_up == 0) {
+    minute_up = 30;
+  }
+  else {
+    minute_up = 0;
+    hour_up++;
+  }
+  if (hour_up > 23) {
+    hour_up = 0;
+  }
+}
+
+void decrease_up() {
+  if (minute_up == 30) {
+    minute_up = 0;
+  }
+  else {
+    minute_up = 30;
+    hour_up--;
+  }
+  if (hour_up < 0) {
+    hour_up = 23;
+  }
+}
+
+void increase_down() {
+  if (minute_down == 0) {
+    minute_down = 30;
+  }
+  else {
+    minute_down = 0;
+    hour_down++;
+  }
+  if (hour_down > 23) {
+    hour_down = 0;
+  }
+}
+
+void decrease_down() {
+  if (minute_down == 30) {
+    minute_down = 0;
+  }
+  else {
+    minute_down = 30;
+    hour_down--;
+  }
+  if (hour_down < 0) {
+    hour_down = 23;
+  }
 }
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
@@ -73,6 +149,8 @@ void setup() {
   display.display();
   wifiManager.autoConnect("Rolladen");
   timeClient.begin();
+  //writeConfig();
+  readConfig();
 }
 
 void loop() {
@@ -90,12 +168,30 @@ void loop() {
   display.println(" ");
   display.setTextSize(2);
   display.print((char)24);
-  display.println("08:00 ");
+  if (hour_up < 10) {
+    display.print("0");
+  } 
+  display.print(hour_up);
+  display.print(":");
+  if (minute_up < 10) {
+    display.print("0");
+  } 
+  display.println(minute_up);
   display.print((char) 25);
-  display.println("22:00");
+  if (hour_down < 10) {
+    display.print("0");
+  } 
+  display.print(hour_down);
+  display.print(":");
+  if (minute_down < 10) {
+    display.print("0");
+  } 
+  display.println(minute_down);
   display.setTextSize(1);
   display.println("Debug Line");
   display.display();
-  delay(2000);
+  decrease_up();
+  decrease_down();
+  delay(1000);
 }
 
