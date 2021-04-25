@@ -6,9 +6,20 @@
 #include <NTPClient.h>
 #include <Timezone.h>
 #include <EEPROM.h>
+#include <OneButton.h>
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
+#define BTN_UP_INCREASE D3
+#define BTN_UP_DECREASE D4
+#define BTN_DOWN_INCREASE D5
+#define BTN_DOWN_DECREASE D6
+
+OneButton btn_up_increase(BTN_UP_INCREASE);
+OneButton btn_up_decrease(BTN_UP_DECREASE);
+OneButton btn_down_increase(BTN_DOWN_INCREASE);
+OneButton btn_down_decrease(BTN_DOWN_DECREASE);
 
 int hour_up = 9;
 int minute_up = 0;
@@ -133,7 +144,31 @@ TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120};     // Central European 
 TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};       // Central European Standard Time
 Timezone CE(CEST, CET);
 
+void btn_up_increase_click() {
+  increase_up();
+  writeConfig();
+}
+
+void btn_up_decrease_click() {
+  decrease_up();
+  writeConfig();
+}
+
+void btn_down_increase_click() {
+  increase_down();
+  writeConfig();
+}
+
+void btn_down_decrease_click() {
+  decrease_down();
+  writeConfig();
+}
+
 void setup() {
+  btn_up_increase.attachClick(btn_up_increase_click);
+  btn_up_decrease.attachClick(btn_up_decrease_click);
+  btn_down_increase.attachClick(btn_down_increase_click);
+  btn_down_decrease.attachClick(btn_down_decrease_click);
   Serial.begin(9600);
 
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
@@ -153,12 +188,7 @@ void setup() {
   readConfig();
 }
 
-void loop() {
-  if (timeClient.update()){
-     Serial.print ( "Adjust local clock" );
-     unsigned long epoch = timeClient.getEpochTime();
-     setTime(epoch);
-  }
+void updateDisplay(){
   display.clearDisplay();
   display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(SSD1306_WHITE);        // Draw white text
@@ -190,6 +220,15 @@ void loop() {
   display.setTextSize(1);
   display.println("Debug Line");
   display.display();
+}
+
+void loop() {
+  if (timeClient.update()){
+     Serial.print ( "Adjust local clock" );
+     unsigned long epoch = timeClient.getEpochTime();
+     setTime(epoch);
+  }
+  updateDisplay();
   decrease_up();
   decrease_down();
   delay(1000);
