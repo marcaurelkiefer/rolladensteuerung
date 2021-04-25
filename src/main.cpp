@@ -8,13 +8,7 @@
 #include <EEPROM.h>
 #include <OneButton.h>
 
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-
-#define BTN_UP_INCREASE D3
-#define BTN_UP_DECREASE D4
-#define BTN_DOWN_INCREASE D5
-#define BTN_DOWN_DECREASE D6
+#include "config.h"
 
 OneButton btn_up_increase(BTN_UP_INCREASE);
 OneButton btn_up_decrease(BTN_UP_DECREASE);
@@ -127,13 +121,6 @@ void decrease_down() {
   }
 }
 
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-// The pins for I2C are defined by the Wire-library. 
-// On an arduino UNO:       A4(SDA), A5(SCL)
-// On an arduino MEGA 2560: 20(SDA), 21(SCL)
-// On an arduino LEONARDO:   2(SDA),  3(SCL), ...
-#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
-#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 WiFiManager wifiManager;
@@ -164,7 +151,36 @@ void btn_down_decrease_click() {
   writeConfig();
 }
 
+void tickButtons() {
+  btn_up_increase.tick();
+  btn_up_decrease.tick();
+  btn_down_increase.tick();
+  btn_down_decrease.tick();
+}
+
+void checkAndMoveRolladen() {
+  if (hour() == hour_up && minute() == minute_up && (second() == 0 || second() == 1)) {
+    digitalWrite(OUTPUT_ROLLADEN_UP, HIGH);
+  } else {
+    digitalWrite(OUTPUT_ROLLADEN_UP, LOW);
+  }
+  if (hour() == hour_down && minute() == minute_down && (second() == 0 || second() == 1)) {
+    digitalWrite(OUTPUT_ROLLADEN_DOWN, HIGH);
+  } else {
+    digitalWrite(OUTPUT_ROLLADEN_DOWN, LOW);
+  }
+}
+
+void initOutputs() {
+  digitalWrite(OUTPUT_ROLLADEN_UP, LOW);
+  digitalWrite(OUTPUT_ROLLADEN_DOWN, LOW);
+  pinMode(OUTPUT_ROLLADEN_UP, OUTPUT);
+  pinMode(OUTPUT_ROLLADEN_DOWN, OUTPUT);
+  
+}
+
 void setup() {
+  initOutputs();
   btn_up_increase.attachClick(btn_up_increase_click);
   btn_up_decrease.attachClick(btn_up_decrease_click);
   btn_down_increase.attachClick(btn_down_increase_click);
@@ -228,9 +244,8 @@ void loop() {
      unsigned long epoch = timeClient.getEpochTime();
      setTime(epoch);
   }
+  tickButtons();
+  checkAndMoveRolladen();
   updateDisplay();
-  decrease_up();
-  decrease_down();
-  delay(1000);
 }
 
