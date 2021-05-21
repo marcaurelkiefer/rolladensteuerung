@@ -159,12 +159,12 @@ void tickButtons() {
 }
 
 void checkAndMoveRolladen() {
-  if (hour() == hour_up && minute() == minute_up && (second() == 0 || second() == 1)) {
+  if (hour() == hour_up && minute() == minute_up) {
     digitalWrite(OUTPUT_ROLLADEN_UP, HIGH);
   } else {
     digitalWrite(OUTPUT_ROLLADEN_UP, LOW);
   }
-  if (hour() == hour_down && minute() == minute_down && (second() == 0 || second() == 1)) {
+  if (hour() == hour_down && minute() == minute_down) {
     digitalWrite(OUTPUT_ROLLADEN_DOWN, HIGH);
   } else {
     digitalWrite(OUTPUT_ROLLADEN_DOWN, LOW);
