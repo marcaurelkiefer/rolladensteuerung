@@ -7,6 +7,7 @@
 #include <Timezone.h>
 #include <EEPROM.h>
 #include <OneButton.h>
+#include <ArduinoOTA.h>
 
 #include "config.h"
 
@@ -180,6 +181,9 @@ void initOutputs() {
 }
 
 void setup() {
+  ArduinoOTA.setHostname("flashrolladen");
+  ArduinoOTA.setPassword("antigua");
+  ArduinoOTA.begin();
   initOutputs();
   btn_up_increase.attachClick(btn_up_increase_click);
   btn_up_decrease.attachClick(btn_up_decrease_click);
@@ -239,6 +243,7 @@ void updateDisplay(){
 }
 
 void loop() {
+  ArduinoOTA.handle();
   if (timeClient.update()){
      Serial.print ( "Adjust local clock" );
      unsigned long epoch = timeClient.getEpochTime();
