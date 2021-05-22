@@ -182,7 +182,7 @@ void initOutputs() {
 
 void setup() {
   ArduinoOTA.setHostname("flashrolladen");
-  ArduinoOTA.setPassword("antigua");
+  ArduinoOTA.setPassword("password");
   ArduinoOTA.begin();
   initOutputs();
   btn_up_increase.attachClick(btn_up_increase_click);
