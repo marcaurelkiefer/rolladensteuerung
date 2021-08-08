@@ -4,8 +4,11 @@
 #define BTN_UP_DECREASE D4
 #define BTN_DOWN_INCREASE D5
 #define BTN_DOWN_DECREASE D6
-#define OUTPUT_ROLLADEN_UP D7
-#define OUTPUT_ROLLADEN_DOWN D8
+#define OUTPUT_ROLLADEN_UP D1
+#define OUTPUT_ROLLADEN_DOWN D2
+
+#define DISPLAY_SCL D8
+#define DISPLAY_SDA D7
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 // The pins for I2C are defined by the Wire-library. 

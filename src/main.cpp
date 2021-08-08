@@ -22,6 +22,8 @@ int minute_up = 0;
 int hour_down = 22;
 int minute_down = 00;
 
+String debug_line;
+
 /**
  * Input time in epoch format and return tm time format
  * by Renzo Mischianti <www.mischianti.org> 
@@ -68,6 +70,19 @@ void readConfig() {
   minute_up = EEPROM.read(2);
   hour_down = EEPROM.read(3);
   minute_down = EEPROM.read(4);
+  //sanitize inputs
+  if (hour_up > 23 || hour_up < 0) {
+    hour_up = 8;
+  }
+  if (hour_down > 23 || hour_down < 0) {
+    hour_down = 22;
+  }
+  if (minute_up > 59 || minute_up < 0) {
+    minute_up = 0;
+  }
+  if (minute_down > 59 || minute_down < 0) {
+    minute_down = 0;
+  }
 }
 
 void increase_up() {
@@ -160,14 +175,20 @@ void tickButtons() {
 }
 
 void checkAndMoveRolladen() {
-  if (hour() == hour_up && minute() == minute_up) {
+  time_t local_time = CE.toLocal(now());
+  tm* tm_ptr = gmtime(&local_time);
+  if (tm_ptr->tm_hour == hour_up && tm_ptr->tm_min == minute_up && tm_ptr->tm_sec < 20) {
     digitalWrite(OUTPUT_ROLLADEN_UP, HIGH);
+    debug_line = "moving up";
   } else {
     digitalWrite(OUTPUT_ROLLADEN_UP, LOW);
+    debug_line = String(tm_ptr->tm_hour) + ":" + String(tm_ptr->tm_min) + ":" + String(tm_ptr->tm_sec);
   }
-  if (hour() == hour_down && minute() == minute_down) {
+  if (tm_ptr->tm_hour == hour_down && tm_ptr->tm_min == minute_down  && tm_ptr->tm_sec < 20) {
+    debug_line = "moving down";
     digitalWrite(OUTPUT_ROLLADEN_DOWN, HIGH);
   } else {
+    debug_line = String(tm_ptr->tm_hour) + ":" + String(tm_ptr->tm_min) + ":" + String(tm_ptr->tm_sec);
     digitalWrite(OUTPUT_ROLLADEN_DOWN, LOW);
   }
 }
@@ -181,16 +202,16 @@ void initOutputs() {
 }
 
 void setup() {
-  ArduinoOTA.setHostname("flashrolladen");
-  ArduinoOTA.setPassword("password");
-  ArduinoOTA.begin();
   initOutputs();
+  ArduinoOTA.setHostname("flashrolladen");
+  //ArduinoOTA.setPassword("password");
+  ArduinoOTA.begin();
   btn_up_increase.attachClick(btn_up_increase_click);
   btn_up_decrease.attachClick(btn_up_decrease_click);
   btn_down_increase.attachClick(btn_down_increase_click);
   btn_down_decrease.attachClick(btn_down_decrease_click);
   Serial.begin(9600);
-
+  Wire.begin(DISPLAY_SDA, DISPLAY_SCL);
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -213,10 +234,9 @@ void updateDisplay(){
   display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(SSD1306_WHITE);        // Draw white text
   display.setCursor(0,0);             // Start at top-left corner
-  display.println("Wifi: " + wifiManager.getSSID());
-  display.println(getEpochStringByParams(CE.toLocal(now())));
-  display.println(" ");
   display.setTextSize(2);
+  display.println(getEpochStringByParams(CE.toLocal(now()), "%d.%m.%Y"));
+  display.println(getEpochStringByParams(CE.toLocal(now()), "%H:%M:%S"));
   display.print((char)24);
   if (hour_up < 10) {
     display.print("0");
@@ -238,7 +258,8 @@ void updateDisplay(){
   } 
   display.println(minute_down);
   display.setTextSize(1);
-  display.println("Debug Line");
+  display.println("Wifi: " + wifiManager.getSSID());
+  //display.println(debug_line);
   display.display();
 }
 
