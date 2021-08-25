@@ -7,7 +7,7 @@
 #define OUTPUT_ROLLADEN_UP D1
 #define OUTPUT_ROLLADEN_DOWN D2
 
-#define DISPLAY_SCL D8
+#define DISPLAY_SCL D9
 #define DISPLAY_SDA D7
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
